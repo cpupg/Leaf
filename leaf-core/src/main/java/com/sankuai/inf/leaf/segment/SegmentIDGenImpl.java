@@ -7,20 +7,15 @@ import com.sankuai.inf.leaf.segment.dao.IDAllocDao;
 import com.sankuai.inf.leaf.segment.model.LeafAlloc;
 import com.sankuai.inf.leaf.segment.model.Segment;
 import com.sankuai.inf.leaf.segment.model.SegmentBuffer;
-import org.perf4j.StopWatch;
-import org.perf4j.slf4j.Slf4JStopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -58,47 +53,27 @@ public class SegmentIDGenImpl implements IDGen {
 
     @Override
     public boolean init() {
-        LOGGER.info("Init ...");
+        LOGGER.info("初始化id生成器");
         // 确保加载到kv后才初始化成功
         updateCacheFromDb();
         initOK = true;
-        updateCacheFromDbAtEveryMinute();
+        // 不需要每分钟更新业务类型，因为系统运行时不会更新业务类型，只有上线时会更新。
         return initOK;
     }
 
-    private void updateCacheFromDbAtEveryMinute() {
-        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable r) {
-                Thread t = new Thread(r);
-                t.setName("check-idCache-thread");
-                t.setDaemon(true);
-                return t;
-            }
-        });
-        executorService.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                updateCacheFromDb();
-            }
-        }, 60, 60, TimeUnit.SECONDS);
-    }
-
+    /**
+     * 将数据库中的号段按业务加载到缓存中，等待初始化。
+     */
     private void updateCacheFromDb() {
-        LOGGER.info("update cache from db");
-        StopWatch sw = new Slf4JStopWatch();
+        LOGGER.info("从数据库中更新号段缓存");
         try {
             List<String> dbTags = dao.getAllTags();
             if (dbTags == null || dbTags.isEmpty()) {
+                LOGGER.warn("号段表中没有业务，不需要加载号段");
                 return;
             }
-            List<String> cacheTags = new ArrayList<>(cache.keySet());
+            LOGGER.info("数据库中的号段:{}", dbTags);
             Set<String> insertTagsSet = new HashSet<>(dbTags);
-            Set<String> removeTagsSet = new HashSet<>(cacheTags);
-            //db中新加的tags灌进cache
-            for (String tmp : cacheTags) {
-                insertTagsSet.remove(tmp);
-            }
             for (String tag : insertTagsSet) {
                 SegmentBuffer buffer = new SegmentBuffer();
                 buffer.setKey(tag);
@@ -107,20 +82,11 @@ public class SegmentIDGenImpl implements IDGen {
                 segment.setMax(0);
                 segment.setStep(0);
                 cache.put(tag, buffer);
-                LOGGER.info("Add tag {} from db to IdCache, SegmentBuffer {}", tag, buffer);
             }
-            //cache中已失效的tags从cache删除
-            for (String tmp : dbTags) {
-                removeTagsSet.remove(tmp);
-            }
-            for (String tag : removeTagsSet) {
-                cache.remove(tag);
-                LOGGER.info("Remove tag {} from IdCache", tag);
-            }
+            LOGGER.info("所有业务号段都已加载");
+            // 程序运行过程中号段表里的业务不会变，因此不需要更新
         } catch (Exception e) {
-            LOGGER.warn("update cache from db exception", e);
-        } finally {
-            sw.stop("updateCacheFromDb");
+            LOGGER.warn("加载号段失败", e);
         }
     }
 
@@ -136,10 +102,10 @@ public class SegmentIDGenImpl implements IDGen {
                     if (!buffer.isInitOk()) {
                         try {
                             updateSegmentFromDb(key, buffer.getCurrent());
-                            LOGGER.info("Init buffer. Update leafkey {} {} from db", key, buffer.getCurrent());
+                            LOGGER.info("更新业务{}对应的号段{}", key, buffer.getCurrent());
                             buffer.setInitOk(true);
                         } catch (Exception e) {
-                            LOGGER.warn("Init buffer {} exception", buffer.getCurrent(), e);
+                            LOGGER.warn("更新号段{}失败", buffer.getCurrent(), e);
                         }
                     }
                 }
@@ -149,20 +115,29 @@ public class SegmentIDGenImpl implements IDGen {
         return new Result(EXCEPTION_ID_KEY_NOT_EXISTS, Status.EXCEPTION);
     }
 
+    /**
+     * 初始化指定业务的指定号段。
+     *
+     * @param key 业务类型。
+     * @param segment 号段。
+     */
     public void updateSegmentFromDb(String key, Segment segment) {
-        StopWatch sw = new Slf4JStopWatch();
         SegmentBuffer buffer = segment.getBuffer();
         LeafAlloc leafAlloc;
         if (!buffer.isInitOk()) {
+            // 没有初始化时查表获取当前值和步长。
             leafAlloc = dao.updateMaxIdAndGetLeafAlloc(key);
             buffer.setStep(leafAlloc.getStep());
             buffer.setMinStep(leafAlloc.getStep());//leafAlloc中的step为DB中的step
         } else if (buffer.getUpdateTimestamp() == 0) {
+            // 更新时间是long，默认值是0，说明还没有更新过，是第一次更新。
             leafAlloc = dao.updateMaxIdAndGetLeafAlloc(key);
             buffer.setUpdateTimestamp(System.currentTimeMillis());
             buffer.setStep(leafAlloc.getStep());
             buffer.setMinStep(leafAlloc.getStep());//leafAlloc中的step为DB中的step
         } else {
+            // 初始化完成且更新过一次，此时就要判断是否增加步长。
+            // 增加步长是根据两次获取id的间隔来确定，间隔小于阈值时变2倍，大于阈值小于2倍阈值时变0.5倍。
             long duration = System.currentTimeMillis() - buffer.getUpdateTimestamp();
             int nextStep = buffer.getStep();
             if (duration < SEGMENT_DURATION) {
@@ -172,9 +147,7 @@ public class SegmentIDGenImpl implements IDGen {
             } else if (duration >= SEGMENT_DURATION * 2) {
                 nextStep = nextStep / 2 >= buffer.getMinStep() ? nextStep / 2 : nextStep;
             }
-            // todo 日志
-            // LOGGER.info("leafKey[{}], step[{}], duration[{}mins], nextStep[{}]", key, buffer.getStep(),
-            //         String.format("%.2f", ((double) duration / (1000 * 60))), nextStep);
+            LOGGER.info("leafKey={}, step={}, duration={}, nextStep={}", key, buffer.getStep(), duration, nextStep);
             LeafAlloc temp = new LeafAlloc();
             temp.setKey(key);
             temp.setStep(nextStep);
@@ -188,14 +161,22 @@ public class SegmentIDGenImpl implements IDGen {
         segment.getValue().set(value);
         segment.setMax(leafAlloc.getMaxId());
         segment.setStep(buffer.getStep());
-        sw.stop("updateSegmentFromDb", key + " " + segment);
     }
 
+    /**
+     * 从缓冲池中获取id。
+     *
+     * @param buffer 缓冲池。
+     *
+     * @return id。
+     */
     public Result getIdFromSegmentBuffer(final SegmentBuffer buffer) {
         while (true) {
             buffer.rLock().lock();
             try {
                 final Segment segment = buffer.getCurrent();
+                // 一共两个号段，另一个号段已经准备好并且当前号段已使用90%时，异步更新另一个号段。
+                // nextReady只在当前号段已用完切换另一个号段时变false。
                 if (!buffer.isNextReady() && (segment.getIdle() < 0.9 * segment.getStep()) && buffer.getThreadRunning()
                         .compareAndSet(false, true)) {
                     threadPoolExecutor.execute(new Runnable() {
@@ -206,9 +187,9 @@ public class SegmentIDGenImpl implements IDGen {
                             try {
                                 updateSegmentFromDb(buffer.getKey(), next);
                                 updateOk = true;
-                                LOGGER.info("update segment {} from db {}", buffer.getKey(), next);
+                                LOGGER.info("更新业务{}对应的号段{}", buffer.getKey(), next);
                             } catch (Exception e) {
-                                LOGGER.warn("{} updateSegmentFromDb exception", buffer.getKey(), e);
+                                LOGGER.warn("号段{}更新失败", buffer.getKey(), e);
                             } finally {
                                 if (updateOk) {
                                     buffer.wLock().lock();
@@ -229,11 +210,13 @@ public class SegmentIDGenImpl implements IDGen {
             } finally {
                 buffer.rLock().unlock();
             }
+            LOGGER.info("当前号段已用完，等待切换下一个号段");
             waitAndSleep(buffer);
             buffer.wLock().lock();
             try {
                 final Segment segment = buffer.getCurrent();
                 long value = segment.getValue().getAndIncrement();
+                // 小于号段最大值直接返回，否则切号段，切完后setNextReady(false)
                 if (value < segment.getMax()) {
                     return new Result(value, Status.SUCCESS);
                 }
@@ -241,7 +224,8 @@ public class SegmentIDGenImpl implements IDGen {
                     buffer.switchPos();
                     buffer.setNextReady(false);
                 } else {
-                    LOGGER.error("Both two segments in {} are not ready!", buffer);
+                    // 说明updateSegmentFromDb出错
+                    LOGGER.error("两个号段缓存都没有准备好", buffer);
                     return new Result(EXCEPTION_ID_TWO_SEGMENTS_ARE_NULL, Status.EXCEPTION);
                 }
             } finally {
@@ -250,9 +234,17 @@ public class SegmentIDGenImpl implements IDGen {
         }
     }
 
-    private void waitAndSleep(SegmentBuffer buffer) {
+    /**
+     * 等待另一个线程运行完成。
+     *
+     * <p>这是一个同步锁，缓冲池只允许一个线程操作，通过原子类AtomicBoolean实现。</p>
+     *
+     * @param buffer 缓冲池。
+     */
+    public void waitAndSleep(SegmentBuffer buffer) {
         int roll = 0;
         while (buffer.getThreadRunning().get()) {
+            // roll加到1w很快，测试结果是1ms
             roll += 1;
             if (roll > 10000) {
                 try {
@@ -272,10 +264,6 @@ public class SegmentIDGenImpl implements IDGen {
 
     public Map<String, SegmentBuffer> getCache() {
         return cache;
-    }
-
-    public IDAllocDao getDao() {
-        return dao;
     }
 
     public void setDao(IDAllocDao dao) {
