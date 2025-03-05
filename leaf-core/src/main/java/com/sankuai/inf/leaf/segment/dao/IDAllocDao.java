@@ -4,9 +4,41 @@ import com.sankuai.inf.leaf.segment.model.LeafAlloc;
 
 import java.util.List;
 
+/**
+ * 操作号段表用到的sql。
+ *
+ * <p>可以是mapper，也可以是service，总之能操作号段表就行。</p>
+ */
 public interface IDAllocDao {
-     List<LeafAlloc> getAllLeafAllocs();
-     LeafAlloc updateMaxIdAndGetLeafAlloc(String tag);
-     LeafAlloc updateMaxIdByCustomStepAndGetLeafAlloc(LeafAlloc leafAlloc);
-     List<String> getAllTags();
+    /**
+     * 获取号段表中的所有业务号段。
+     *
+     * @return 业务号段。
+     */
+    List<LeafAlloc> getAllLeafAllocs();
+
+    /**
+     * 更新号段表兵返回最新数据。
+     *
+     * @param tag 业务类型。
+     *
+     * @return 最新号段。
+     */
+    LeafAlloc updateMaxIdAndGetLeafAlloc(String tag);
+
+    /**
+     * 更新步长并返回最新号段。
+     *
+     * @param leafAlloc 步长。
+     *
+     * @return 号段。
+     */
+    LeafAlloc updateMaxIdByCustomStepAndGetLeafAlloc(LeafAlloc leafAlloc);
+
+    /**
+     * 返回所有号段标签。
+     *
+     * @return 数据库中保存的所有号段标签。
+     */
+    List<String> getAllTags();
 }
