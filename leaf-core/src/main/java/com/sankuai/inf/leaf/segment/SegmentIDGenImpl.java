@@ -10,6 +10,8 @@ import com.sankuai.inf.leaf.segment.model.SegmentBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +52,32 @@ public class SegmentIDGenImpl implements IDGen {
     private volatile boolean initOK = false;
     private Map<String, SegmentBuffer> cache = new ConcurrentHashMap<>();
     private IDAllocDao dao;
+
+    /**
+     * 返回id结果。
+     *
+     * @param buffer 双号段缓存。
+     * @param segment 号段。
+     *
+     * @return 结果。
+     */
+    private Result getResult(SegmentBuffer buffer, Segment segment) {
+        long value = segment.getValue().getAndIncrement();
+        if (value < segment.getMax()) {
+            // 当日期变化或达到最大值时，重置id为1，步长为1000。
+            Calendar instance = Calendar.getInstance();
+            instance.setTime(new Date());
+            int currentDay = instance.get(Calendar.DAY_OF_MONTH);
+            instance.setTimeInMillis(buffer.getUpdateTimestamp());
+            int segmentDay = instance.get(Calendar.DAY_OF_MONTH);
+            if (value > buffer.getMaxNumber() || currentDay != segmentDay) {
+                buffer.resetSegment();
+            } else {
+                return new Result(value, Status.SUCCESS);
+            }
+        }
+        return new Result(-1, Status.EXCEPTION);
+    }
 
     @Override
     public boolean init() {
@@ -154,7 +182,12 @@ public class SegmentIDGenImpl implements IDGen {
             leafAlloc = dao.updateMaxIdByCustomStepAndGetLeafAlloc(temp);
             buffer.setUpdateTimestamp(System.currentTimeMillis());
             buffer.setStep(nextStep);
-            buffer.setMinStep(leafAlloc.getStep());//leafAlloc的step为DB中的step
+            // leafAlloc的step为DB中的step
+            buffer.setMinStep(leafAlloc.getStep());
+            if (buffer.getMaxNumber() == 0) {
+                buffer.setMaxNumber(leafAlloc.getMaxNumber());
+                buffer.setLength(String.valueOf(leafAlloc.getMaxNumber()).length());
+            }
         }
         // must set value before set max
         long value = leafAlloc.getMaxId() - buffer.getStep();
@@ -203,10 +236,9 @@ public class SegmentIDGenImpl implements IDGen {
                         }
                     });
                 }
-                long value = segment.getValue().getAndIncrement();
-                if (value < segment.getMax()) {
-                    return new Result(value, Status.SUCCESS);
-                }
+                Result value = getResult(buffer, segment);
+                if (value != null)
+                    return value;
             } finally {
                 buffer.rLock().unlock();
             }
@@ -215,11 +247,9 @@ public class SegmentIDGenImpl implements IDGen {
             buffer.wLock().lock();
             try {
                 final Segment segment = buffer.getCurrent();
-                long value = segment.getValue().getAndIncrement();
-                // 小于号段最大值直接返回，否则切号段，切完后setNextReady(false)
-                if (value < segment.getMax()) {
-                    return new Result(value, Status.SUCCESS);
-                }
+                Result value = getResult(buffer, segment);
+                if (value != null)
+                    return value;
                 if (buffer.isNextReady()) {
                     buffer.switchPos();
                     buffer.setNextReady(false);

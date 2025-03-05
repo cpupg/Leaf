@@ -2,6 +2,7 @@ package com.sankuai.inf.leaf.segment.model;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -36,6 +37,14 @@ public class SegmentBuffer {
     private volatile int step;
     private volatile int minStep;
     private volatile long updateTimestamp;
+    /**
+     * 当前业务允许的最大id。
+     */
+    private long maxNumber;
+    /**
+     * 当前业务允许的最大id长度。
+     */
+    private int length;
 
     public SegmentBuffer() {
         segments = new Segment[]{new Segment(this), new Segment(this)};
@@ -44,6 +53,16 @@ public class SegmentBuffer {
         initOk = false;
         threadRunning = new AtomicBoolean(false);
         lock = new ReentrantReadWriteLock();
+    }
+
+    /**
+     * 将号段当前值改为1，步长改为1000。
+     */
+    public void resetSegment() {
+        segments[0].setStep(1000);
+        segments[0].setValue(new AtomicLong(1));
+        segments[1].setStep(1000);
+        segments[1].setValue(new AtomicLong(1));
     }
 
     public int nextPos() {
@@ -142,4 +161,19 @@ public class SegmentBuffer {
         this.updateTimestamp = updateTimestamp;
     }
 
+    public long getMaxNumber() {
+        return maxNumber;
+    }
+
+    public void setMaxNumber(long maxNumber) {
+        this.maxNumber = maxNumber;
+    }
+
+    public int getLength() {
+        return length;
+    }
+
+    public void setLength(int length) {
+        this.length = length;
+    }
 }
