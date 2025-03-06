@@ -6,9 +6,10 @@
     <context:property-placeholder location="classpath:leaf.properties"/>
     <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
           init-method="init" destroy-method="close">
-        <property name="url" value="${jdbc.url}"/>
-        <property name="username" value="${jdbc.username}"/>
-        <property name="password" value="${jdbc.password}"/>
+        <property name="url" value="${leaf.jdbc.url}"/>
+        <property name="driverClassName" value="${leaf.jdbc.driver}"/>
+        <property name="username" value="${leaf.jdbc.username}"/>
+        <property name="password" value="${leaf.jdbc.password}"/>
         <!-- 配置获取连接等待超时的时间 -->
         <property name="maxWait" value="10000"/>
         <property name="timeBetweenEvictionRunsMillis" value="60000"/>
@@ -18,7 +19,7 @@
         <property name="testOnReturn" value="false"/>
         <property name="validationQuery" value="select 1 "/>
     </bean>
-    <bean id="idAllocDao" class="com.sankuai.inf.leaf.segment.dao.impl.IDAllocDaoImpl">
+    <bean id="idAllocDao" class="com.sankuai.inf.leaf.server.dao.IDAllocDaoImpl">
         <constructor-arg ref="dataSource"/>
     </bean>
     <bean name="leaf" class="com.sankuai.inf.leaf.segment.SegmentIDGenImpl" init-method="init">

@@ -27,7 +27,7 @@ public class LeafAlloc {
     /**
      * 当前业务允许的最大id，可以用来控制id长度。
      */
-    private int maxNumber;
+    private long maxNumber;
     /**
      * 描述。
      */
@@ -69,11 +69,11 @@ public class LeafAlloc {
         this.step = step;
     }
 
-    public int getMaxNumber() {
+    public long getMaxNumber() {
         return maxNumber;
     }
 
-    public void setMaxNumber(int maxNumber) {
+    public void setMaxNumber(long maxNumber) {
         this.maxNumber = maxNumber;
     }
 

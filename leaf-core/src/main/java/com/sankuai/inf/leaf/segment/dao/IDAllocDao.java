@@ -7,7 +7,8 @@ import java.util.List;
 /**
  * 操作号段表用到的sql。
  *
- * <p>可以是mapper，也可以是service，总之能操作号段表就行。</p>
+ * <p>可以是mapper，也可以是service，总之能操作号段表就行。你可以基于自己的业务添加更多sql，
+ * 但是此接口种的sql必须有。</p>
  */
 public interface IDAllocDao {
     /**

@@ -72,11 +72,12 @@ public class SegmentIDGenImpl implements IDGen {
             int segmentDay = instance.get(Calendar.DAY_OF_MONTH);
             if (value > buffer.getMaxNumber() || currentDay != segmentDay) {
                 buffer.resetSegment();
-            } else {
-                return new Result(value, Status.SUCCESS);
+                return new Result(buffer.getCurrent().getValue().get(), Status.SUCCESS);
             }
+            return new Result(value, Status.SUCCESS);
+        } else {
+            return new Result(-1, Status.EXCEPTION);
         }
-        return new Result(-1, Status.EXCEPTION);
     }
 
     @Override
@@ -150,14 +151,21 @@ public class SegmentIDGenImpl implements IDGen {
      * @param segment 号段。
      */
     public void updateSegmentFromDb(String key, Segment segment) {
+        LOGGER.info("更新号段key={},segment={}", key, segment);
         SegmentBuffer buffer = segment.getBuffer();
         LeafAlloc leafAlloc;
         if (!buffer.isInitOk()) {
+            LOGGER.info("号段还未初始化{}", segment);
             // 没有初始化时查表获取当前值和步长。
             leafAlloc = dao.updateMaxIdAndGetLeafAlloc(key);
             buffer.setStep(leafAlloc.getStep());
             buffer.setMinStep(leafAlloc.getStep());//leafAlloc中的step为DB中的step
+            if (buffer.getMaxNumber() == 0) {
+                buffer.setMaxNumber(leafAlloc.getMaxNumber());
+                buffer.setLength(String.valueOf(leafAlloc.getMaxNumber()).length());
+            }
         } else if (buffer.getUpdateTimestamp() == 0) {
+            LOGGER.info("第一次更新号段{}", segment);
             // 更新时间是long，默认值是0，说明还没有更新过，是第一次更新。
             leafAlloc = dao.updateMaxIdAndGetLeafAlloc(key);
             buffer.setUpdateTimestamp(System.currentTimeMillis());
@@ -184,10 +192,6 @@ public class SegmentIDGenImpl implements IDGen {
             buffer.setStep(nextStep);
             // leafAlloc的step为DB中的step
             buffer.setMinStep(leafAlloc.getStep());
-            if (buffer.getMaxNumber() == 0) {
-                buffer.setMaxNumber(leafAlloc.getMaxNumber());
-                buffer.setLength(String.valueOf(leafAlloc.getMaxNumber()).length());
-            }
         }
         // must set value before set max
         long value = leafAlloc.getMaxId() - buffer.getStep();
@@ -215,6 +219,7 @@ public class SegmentIDGenImpl implements IDGen {
                     threadPoolExecutor.execute(new Runnable() {
                         @Override
                         public void run() {
+
                             Segment next = buffer.getSegments()[buffer.nextPos()];
                             boolean updateOk = false;
                             try {
@@ -236,11 +241,17 @@ public class SegmentIDGenImpl implements IDGen {
                         }
                     });
                 }
-                Result value = getResult(buffer, segment);
-                if (value != null)
-                    return value;
             } finally {
                 buffer.rLock().unlock();
+            }
+            buffer.wLock().lock();
+            try {
+                Result value = getResult(buffer, buffer.getCurrent());
+                if (value.getStatus() == Status.SUCCESS) {
+                    return value;
+                }
+            } finally {
+                buffer.wLock().unlock();
             }
             LOGGER.info("当前号段已用完，等待切换下一个号段");
             waitAndSleep(buffer);
@@ -248,8 +259,9 @@ public class SegmentIDGenImpl implements IDGen {
             try {
                 final Segment segment = buffer.getCurrent();
                 Result value = getResult(buffer, segment);
-                if (value != null)
+                if (value.getStatus() == Status.SUCCESS) {
                     return value;
+                }
                 if (buffer.isNextReady()) {
                     buffer.switchPos();
                     buffer.setNextReady(false);

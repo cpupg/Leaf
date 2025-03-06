@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sankuai.inf.leaf.server.dao.IDAllocMapper">
+  <select id="getAllLeafAllocs" resultType="string">
+    SELECT biz_tag, prefix, max_id, step, description, max_number, update_time
+  </select>
+
+  <select id="getLeafAlloc" resultType="com.sankuai.inf.leaf.segment.model.LeafAlloc">
+    SELECT biz_tag, prefix, max_id, step, description, max_number, update_time
+    FROM leaf_alloc
+    WHERE biz_tag = #{tag}
+  </select>
+
+  <insert id="insertLeafAlloc" parameterType="com.sankuai.inf.leaf.segment.model.LeafAlloc">
+    delete from
+    insert into leaf_alloc (bizTag,Prefix,MaxId,Step,Description,MaxNumber)
+    values (#{bizTag}, #{Prefix}, #{MaxId}, #{Step}, #{Description}, #{MaxNumber});
+  </insert>
+
+  <select id="updateMaxIdAndGetLeafAlloc"
+      resultType="com.sankuai.inf.leaf.segment.model.LeafAlloc">
+    UPDATE leaf_alloc
+    SET max_id = max_id + step,
+      update_time = current_timestamp
+    WHERE biz_tag = #{tag};
+
+    SELECT biz_tag, prefix, max_id, step, description, max_number, update_time
+    FROM leaf_alloc
+    WHERE biz_tag = #{tag}
+  </select>
+
+  <update id="updateMaxIdByCustomStep">
+    UPDATE leaf_alloc
+    SET max_id = max_id + #{step},
+      update_time = current_timestamp
+    WHERE biz_tag = #{key}
+  </update>
+
+  <select id="updateMaxIdByCustomStepAndGetLeafAlloc"
+      resultType="com.sankuai.inf.leaf.segment.model.LeafAlloc"
+      parameterType="com.sankuai.inf.leaf.segment.model.LeafAlloc">
+    UPDATE leaf_alloc
+    SET max_id = max_id + #{step},
+      update_time = current_timestamp
+    WHERE biz_tag = #{key};
+
+    SELECT biz_tag, prefix, max_id, step, description, max_number, update_time
+    FROM leaf_alloc
+    WHERE biz_tag = #{tag}
+  </select>
+
+  <select id="getAllTags" resultType="string">
+    SELECT biz_tag
+    FROM leaf_alloc
+  </select>
+</mapper>
