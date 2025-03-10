@@ -3,20 +3,27 @@
     PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.sankuai.inf.leaf.server.dao.IDAllocMapper">
+  <sql id="base_column_list">
+    biz_tag as key, prefix, max_id, step, description, max_number, update_time
+  </sql>
+
   <select id="getAllLeafAllocs" resultType="string">
-    SELECT biz_tag, prefix, max_id, step, description, max_number, update_time
+    SELECT
+    <include refid="base_column_list"/>
+    from leaf_alloc
   </select>
 
   <select id="getLeafAlloc" resultType="com.sankuai.inf.leaf.segment.model.LeafAlloc">
-    SELECT biz_tag, prefix, max_id, step, description, max_number, update_time
+    SELECT
+    <include refid="base_column_list"/>
     FROM leaf_alloc
     WHERE biz_tag = #{tag}
   </select>
 
   <insert id="insertLeafAlloc" parameterType="com.sankuai.inf.leaf.segment.model.LeafAlloc">
     delete from
-    insert into leaf_alloc (bizTag,Prefix,MaxId,Step,Description,MaxNumber)
-    values (#{bizTag}, #{Prefix}, #{MaxId}, #{Step}, #{Description}, #{MaxNumber});
+    insert into leaf_alloc (biz_tag, prefix, max_id, step,description,max_number)
+    values (#{key}, #{prefix}, #{maxId}, #{step}, #{description}, #{maxNumber});
   </insert>
 
   <select id="updateMaxIdAndGetLeafAlloc"
@@ -24,11 +31,11 @@
     UPDATE leaf_alloc
     SET max_id = max_id + step,
       update_time = current_timestamp
-    WHERE biz_tag = #{tag};
+    WHERE biz_tag = #{key};
 
     SELECT biz_tag, prefix, max_id, step, description, max_number, update_time
     FROM leaf_alloc
-    WHERE biz_tag = #{tag}
+    WHERE biz_tag = #{key}
   </select>
 
   <update id="updateMaxIdByCustomStep">
@@ -43,16 +50,33 @@
       parameterType="com.sankuai.inf.leaf.segment.model.LeafAlloc">
     UPDATE leaf_alloc
     SET max_id = max_id + #{step},
+      <if test="maxNumber != 0">
+        max_number = #{maxNumber},
+      </if>
       update_time = current_timestamp
     WHERE biz_tag = #{key};
 
-    SELECT biz_tag, prefix, max_id, step, description, max_number, update_time
+    SELECT
+    <include refid="base_column_list"/>
     FROM leaf_alloc
-    WHERE biz_tag = #{tag}
+    WHERE biz_tag = #{key}
   </select>
 
   <select id="getAllTags" resultType="string">
     SELECT biz_tag
     FROM leaf_alloc
+  </select>
+
+  <select id="resetLeafAlloc" resultType="com.sankuai.inf.leaf.segment.model.LeafAlloc">
+    UPDATE leaf_alloc
+    SET max_id = 1,
+      step = #{step},
+      update_time = current_timestamp
+    WHERE biz_tag = #{key};
+
+    SELECT
+    <include refid="base_column_list"/>
+    FROM leaf_alloc
+    WHERE biz_tag = #{key}
   </select>
 </mapper>

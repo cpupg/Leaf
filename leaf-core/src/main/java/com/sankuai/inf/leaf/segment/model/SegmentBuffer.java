@@ -63,6 +63,7 @@ public class SegmentBuffer {
         segments[0].setValue(new AtomicLong(1));
         segments[1].setStep(1000);
         segments[1].setValue(new AtomicLong(1));
+        updateTimestamp = System.currentTimeMillis();
     }
 
     public int nextPos() {

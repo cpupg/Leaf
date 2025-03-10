@@ -25,11 +25,14 @@ public class SpringIDGenServiceTest {
 
     @Test
     public void testGetId() throws Exception {
-        idAllocDao.initTable();
+        int maxNumber = 999;
+        int maxCycle = 10;
+        int step = 100;
+        idAllocDao.initTable(maxNumber, step);
         Set<Long> set = new HashSet<>();
         OutputStream os = new FileOutputStream("id.txt");
-        for (int i = 0; i < Constants.MAX_CYCLE; i++) {
-            for (int j = 0; j < Constants.MAX_NUMBER + 10000; j++) {
+        for (int i = 0; i < maxCycle; i++) {
+            for (int j = 0; j < maxNumber + 10; j++) {
                 Result r = idGen.get(Constants.TEST_KEY);
                 set.add(r.getId());
                 String s = String.valueOf(r.getId());
@@ -41,6 +44,6 @@ public class SpringIDGenServiceTest {
             }
         }
         os.close();
-        Assert.assertEquals(Constants.MAX_NUMBER, set.size());
+        Assert.assertEquals(maxNumber, set.size());
     }
 }

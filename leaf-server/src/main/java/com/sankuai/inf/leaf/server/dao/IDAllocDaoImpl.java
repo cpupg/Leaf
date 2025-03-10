@@ -67,7 +67,7 @@ public class IDAllocDaoImpl implements IDAllocDao {
     /**
      * 初始化号段表。
      */
-    public void initTable() {
+    public void initTable(long maxNumber, int step) {
         try (SqlSession sqlSession = sqlSessionFactory.openSession(false)) {
             IDAllocMapper mapper = sqlSession.getMapper(IDAllocMapper.class);
             LeafAlloc leafAlloc = mapper.getLeafAlloc("test");
@@ -76,15 +76,25 @@ public class IDAllocDaoImpl implements IDAllocDao {
                 leafAlloc.setKey(Constants.TEST_KEY);
                 leafAlloc.setPrefix(Constants.TEST_KEY);
                 leafAlloc.setMaxId(0);
-                leafAlloc.setStep(1000);
-                leafAlloc.setMaxNumber(Constants.MAX_NUMBER);
+                leafAlloc.setStep(Constants.DEFAULT_STEP);
+                leafAlloc.setMaxNumber(maxNumber);
                 leafAlloc.setDescription("测试用例");
                 mapper.insertLeafAlloc(leafAlloc);
             }
-            leafAlloc.setStep(1000);
-            leafAlloc.setMaxNumber(Constants.MAX_NUMBER);
+            leafAlloc.setStep(step);
+            leafAlloc.setMaxNumber(maxNumber);
             mapper.updateMaxIdByCustomStepAndGetLeafAlloc(leafAlloc);
             sqlSession.commit();
+        }
+    }
+
+    @Override
+    public LeafAlloc resetLeafAlloc(String key, int step) {
+        try (SqlSession sqlSession = sqlSessionFactory.openSession(false)) {
+            IDAllocMapper mapper = sqlSession.getMapper(IDAllocMapper.class);
+            mapper.resetLeafAlloc(key, step);
+            sqlSession.commit();
+            return mapper.getLeafAlloc("test");
         }
     }
 }
