@@ -72,6 +72,7 @@ public class SegmentIDGenImpl implements IDGen {
             int segmentDay = instance.get(Calendar.DAY_OF_MONTH);
             if (value > buffer.getMaxNumber() || currentDay != segmentDay) {
                 buffer.resetSegment();
+                dao.resetLeafAlloc(buffer.getKey(), 1000);
                 return new Result(buffer.getCurrent().getValue().get(), Status.SUCCESS);
             }
             return new Result(value, Status.SUCCESS);
@@ -244,21 +245,17 @@ public class SegmentIDGenImpl implements IDGen {
             } finally {
                 buffer.rLock().unlock();
             }
-            buffer.wLock().lock();
-            try {
-                Result value = getResult(buffer, buffer.getCurrent());
-                if (value.getStatus() == Status.SUCCESS) {
-                    return value;
-                }
-            } finally {
-                buffer.wLock().unlock();
+
+            Result value = getResult(buffer, buffer.getCurrent());
+            if (value.getStatus() == Status.SUCCESS) {
+                return value;
             }
             LOGGER.info("当前号段已用完，等待切换下一个号段");
             waitAndSleep(buffer);
             buffer.wLock().lock();
             try {
                 final Segment segment = buffer.getCurrent();
-                Result value = getResult(buffer, segment);
+                value = getResult(buffer, segment);
                 if (value.getStatus() == Status.SUCCESS) {
                     return value;
                 }

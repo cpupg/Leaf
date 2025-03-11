@@ -1,6 +1,7 @@
 package com.sankuai.inf.leaf.segment.dao;
 
 import com.sankuai.inf.leaf.segment.model.LeafAlloc;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -42,4 +43,14 @@ public interface IDAllocDao {
      * @return 数据库中保存的所有号段标签。
      */
     List<String> getAllTags();
+
+    /**
+     * 重置id。
+     *
+     * @param key 业务类习惯。
+     * @param step 步长。
+     *
+     * @return 重置后的id。
+     */
+    LeafAlloc resetLeafAlloc(@Param("key") String key, @Param("step") int step);
 }

@@ -11,6 +11,6 @@ public class Constants {
     public static final String LEAF_SNOWFLAKE_PORT = "leaf.snowflake.port";
     public static final String LEAF_SNOWFLAKE_ZK_ADDRESS = "leaf.snowflake.zk.address";
     public static final String TEST_KEY = "test";
-    public static final long MAX_NUMBER = 99999999;
-    public static final int MAX_CYCLE = 100;
+    public static final long DEFAULT_MAX_NUMBER = 99999999;
+    public static final int DEFAULT_STEP = 1000;
 }
