@@ -73,9 +73,9 @@ public class SegmentIDGenImpl implements IDGen {
             if (value > buffer.getMaxNumber() || currentDay != segmentDay) {
                 buffer.resetSegment();
                 dao.resetLeafAlloc(buffer.getKey(), 1000);
-                return new Result(buffer.getCurrent().getValue().get(), Status.SUCCESS);
+                return new Result(buffer.getCurrent().getValue().get(), Status.SUCCESS, buffer.getLength());
             }
-            return new Result(value, Status.SUCCESS);
+            return new Result(value, Status.SUCCESS, buffer.getLength());
         } else {
             return new Result(-1, Status.EXCEPTION);
         }
@@ -159,6 +159,7 @@ public class SegmentIDGenImpl implements IDGen {
             LOGGER.info("号段还未初始化{}", segment);
             // 没有初始化时查表获取当前值和步长。
             leafAlloc = dao.updateMaxIdAndGetLeafAlloc(key);
+            buffer.setLength(String.valueOf(leafAlloc.getMaxNumber()).length());
             buffer.setStep(leafAlloc.getStep());
             buffer.setMinStep(leafAlloc.getStep());//leafAlloc中的step为DB中的step
             if (buffer.getMaxNumber() == 0) {
@@ -169,6 +170,7 @@ public class SegmentIDGenImpl implements IDGen {
             LOGGER.info("第一次更新号段{}", segment);
             // 更新时间是long，默认值是0，说明还没有更新过，是第一次更新。
             leafAlloc = dao.updateMaxIdAndGetLeafAlloc(key);
+            buffer.setLength(String.valueOf(leafAlloc.getMaxNumber()).length());
             buffer.setUpdateTimestamp(System.currentTimeMillis());
             buffer.setStep(leafAlloc.getStep());
             buffer.setMinStep(leafAlloc.getStep());//leafAlloc中的step为DB中的step
@@ -189,6 +191,7 @@ public class SegmentIDGenImpl implements IDGen {
             temp.setKey(key);
             temp.setStep(nextStep);
             leafAlloc = dao.updateMaxIdByCustomStepAndGetLeafAlloc(temp);
+            buffer.setLength(String.valueOf(leafAlloc.getMaxNumber()).length());
             buffer.setUpdateTimestamp(System.currentTimeMillis());
             buffer.setStep(nextStep);
             // leafAlloc的step为DB中的step

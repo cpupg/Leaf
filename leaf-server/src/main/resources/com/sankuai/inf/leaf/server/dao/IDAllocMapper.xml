@@ -7,7 +7,7 @@
     biz_tag as key, prefix, max_id, step, description, max_number, update_time
   </sql>
 
-  <select id="getAllLeafAllocs" resultType="string">
+  <select id="getAllLeafAllocs" resultType="com.sankuai.inf.leaf.segment.model.LeafAlloc">
     SELECT
     <include refid="base_column_list"/>
     from leaf_alloc
@@ -33,7 +33,8 @@
       update_time = current_timestamp
     WHERE biz_tag = #{key};
 
-    SELECT biz_tag, prefix, max_id, step, description, max_number, update_time
+    SELECT
+    <include refid="base_column_list"/>
     FROM leaf_alloc
     WHERE biz_tag = #{key}
   </select>
