@@ -37,19 +37,19 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <spring.version>4.3.18.RELEASE</spring.version>
         <junit.version>4.12</junit.version>
         <maven.compiler.version>3.5.1</maven.compiler.version>
-        <mybatis.version>3.3.0</mybatis.version>
+        <mybatis.version>3.5.19</mybatis.version>
         <perf4j.version>0.9.16</perf4j.version>
         <curator.version>2.6.0</curator.version>
         <slf4j.version>1.7.2</slf4j.version>
         <druid.version>1.0.18</druid.version>
         <jackson-databind.version>2.9.6</jackson-databind.version>
-        <mysql-connector-java.version>5.1.38</mysql-connector-java.version>
-        <commons-io.version>2.4</commons-io.version>
+        <mysql-connector-java.version>8.0.33</mysql-connector-java.version>
+        <commons-io.version>2.18.0</commons-io.version>
         <log4j.version>2.7</log4j.version>
-        <mybatis-spring.version>1.2.5</mybatis-spring.version>
+        <mybatis-spring.version>2.1.0</mybatis-spring.version>
+        <postgresql.version>42.3.8</postgresql.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -96,33 +96,11 @@
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
-
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-core</artifactId>
-                <version>${spring.version}</version>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-beans</artifactId>
-                <version>${spring.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-jdbc</artifactId>
-                <version>${spring.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-context</artifactId>
-                <version>${spring.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-test</artifactId>
-                <version>${spring.version}</version>
-            </dependency>
-
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-slf4j-impl</artifactId>
@@ -163,8 +141,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven.compiler.version}</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
             <plugin>

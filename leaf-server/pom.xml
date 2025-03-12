@@ -7,14 +7,13 @@
         <artifactId>leaf-parent</artifactId>
         <version>1.0.1</version>
     </parent>
-    <groupId>com.sankuai.inf.leaf</groupId>
     <artifactId>leaf-server</artifactId>
     <version>1.0.1</version>
     <packaging>jar</packaging>
     <name>leaf-server</name>
     <description>Leaf HTTP Server</description>
     <properties>
-        <spring-boot-dependencies.version>1.5.18.RELEASE</spring-boot-dependencies.version>
+        <spring-boot-dependencies.version>2.7.18</spring-boot-dependencies.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -44,6 +43,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.sankuai.inf.leaf</groupId>
             <artifactId>leaf-core</artifactId>
         </dependency>
@@ -66,6 +70,14 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis-spring</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
         </dependency>
     </dependencies>
     <build>
