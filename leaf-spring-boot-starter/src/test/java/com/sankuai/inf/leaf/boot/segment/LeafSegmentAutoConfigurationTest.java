@@ -1,5 +1,7 @@
 package com.sankuai.inf.leaf.boot.segment;
 
+import com.sankuai.inf.leaf.IDGen;
+import com.sankuai.inf.leaf.segment.dao.IDAllocDao;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,5 +20,7 @@ public class LeafSegmentAutoConfigurationTest {
     @Test
     public void testSpring() {
         Assert.assertNotNull(context);
+        Assert.assertNotNull(context.getBean(IDAllocDao.class));
+        Assert.assertNotNull(context.getBean(IDGen.class));
     }
 }
