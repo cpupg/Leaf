@@ -1,8 +1,9 @@
-package com.sankuai.inf.leaf.snowflake;
+package com.sankuai.inf.leaf.server;
 
 import com.sankuai.inf.leaf.IDGen;
 import com.sankuai.inf.leaf.common.PropertyFactory;
 import com.sankuai.inf.leaf.common.Result;
+import com.sankuai.inf.leaf.snowflake.SnowflakeIDGenImpl;
 import org.junit.Test;
 
 import java.util.Properties;
