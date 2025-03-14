@@ -37,37 +37,104 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <junit.version>4.12</junit.version>
-    <maven.compiler.version>3.5.1</maven.compiler.version>
-    <mybatis.version>3.5.19</mybatis.version>
-    <perf4j.version>0.9.16</perf4j.version>
-    <curator.version>2.6.0</curator.version>
-    <slf4j.version>1.7.2</slf4j.version>
-    <druid.version>1.0.18</druid.version>
-    <jackson-databind.version>2.9.6</jackson-databind.version>
-    <mysql-connector-java.version>8.0.33</mysql-connector-java.version>
-    <commons-io.version>2.18.0</commons-io.version>
-    <log4j.version>2.7</log4j.version>
-    <mybatis-spring.version>2.1.0</mybatis-spring.version>
-    <postgresql.version>42.3.8</postgresql.version>
+    <maven.version.compiler>3.5.1</maven.version.compiler>
+
+    <!--按dependency中的顺序-->
+    <version.leaf>1.0.1</version.leaf>
+    <version.spring-boot>2.7.18</version.spring-boot>
+    <version.druid>1.0.18</version.druid>
+    <version.postgresql>42.3.8</version.postgresql>
+    <version.mysql>8.0.33</version.mysql>
+    <version.mybatis>3.5.19</version.mybatis>
+    <version.mybatis-spring>2.1.0</version.mybatis-spring>
+    <version.mybatis-spring-boot>2.3.1</version.mybatis-spring-boot>
+    <version.curator>2.6.0</version.curator>
+    <version.junit>4.12</version.junit>
+    <version.common-io>2.18.0</version.common-io>
+    <version.perf4j>0.9.16</version.perf4j>
+    <version.slf4j>1.7.2</version.slf4j>
+    <version.log4j>2.7</version.log4j>
+    <version.jackson>2.9.6</version.jackson>
   </properties>
   <dependencyManagement>
     <dependencies>
+      <!--leaf 开始-->
       <dependency>
         <groupId>com.sankuai.inf.leaf</groupId>
         <artifactId>leaf-core</artifactId>
-        <version>1.0.1</version>
+        <version>${version.leaf}</version>
       </dependency>
+      <dependency>
+        <groupId>com.sankuai.inf.leaf</groupId>
+        <artifactId>leaf-server</artifactId>
+        <version>${version.leaf}</version>
+      </dependency>
+      <!--leaf 结束-->
+
+      <!--springboot 开始-->
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter</artifactId>
+        <version>${version.spring-boot}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <version>${version.spring-boot}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-jdbc</artifactId>
+        <version>${version.spring-boot}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-autoconfigure</artifactId>
+        <version>${version.spring-boot}</version>
+      </dependency>
+      <!--springboot 结束-->
+
+      <!--数据库 开始-->
       <dependency>
         <groupId>com.alibaba</groupId>
         <artifactId>druid</artifactId>
-        <version>${druid.version}</version>
+        <version>${version.druid}</version>
       </dependency>
-      <!--zk-->
+      <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>${version.postgresql}</version>
+      </dependency>
+      <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>${version.mysql}</version>
+      </dependency>
+      <!--数据库 结束-->
+
+      <!--mybatis 开始-->
+      <dependency>
+        <groupId>org.mybatis</groupId>
+        <artifactId>mybatis</artifactId>
+        <version>${version.mybatis}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mybatis</groupId>
+        <artifactId>mybatis-spring</artifactId>
+        <version>${version.mybatis-spring}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mybatis.spring.boot</groupId>
+        <artifactId>mybatis-spring-boot-starter</artifactId>
+        <version>${version.mybatis-spring-boot}</version>
+      </dependency>
+      <!--mybatis 结束-->
+
+      <!--zookeeper 开始-->
       <dependency>
         <groupId>org.apache.curator</groupId>
         <artifactId>curator-recipes</artifactId>
-        <version>${curator.version}</version>
+        <version>${version.curator}</version>
         <exclusions>
           <exclusion>
             <artifactId>log4j</artifactId>
@@ -75,66 +142,56 @@
           </exclusion>
         </exclusions>
       </dependency>
+      <!--zookeeper 结束-->
+
+      <!--工具类 开始-->
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <version>${commons-io.version}</version>
+        <version>${version.common-io}</version>
       </dependency>
-      <dependency>
-        <groupId>org.mybatis</groupId>
-        <artifactId>mybatis</artifactId>
-        <version>${mybatis.version}</version>
-      </dependency>
-
       <dependency>
         <groupId>org.perf4j</groupId>
         <artifactId>perf4j</artifactId>
-        <version>${perf4j.version}</version>
+        <version>${version.perf4j}</version>
       </dependency>
+      <!--工具类 结束-->
+
+      <!--日志 开始-->
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
-        <version>${slf4j.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.postgresql</groupId>
-        <artifactId>postgresql</artifactId>
-        <version>${postgresql.version}</version>
+        <version>${version.slf4j}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-slf4j-impl</artifactId>
-        <version>${log4j.version}</version>
+        <version>${version.log4j}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-api</artifactId>
-        <version>${log4j.version}</version>
+        <version>${version.log4j}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-core</artifactId>
-        <version>${log4j.version}</version>
+        <version>${version.log4j}</version>
       </dependency>
-      <dependency>
-        <groupId>mysql</groupId>
-        <artifactId>mysql-connector-java</artifactId>
-        <version>${mysql-connector-java.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.mybatis</groupId>
-        <artifactId>mybatis-spring</artifactId>
-        <version>${mybatis-spring.version}</version>
-      </dependency>
+      <!--日志 结束-->
+
+      <!--单元测试 开始-->
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
-        <version>${junit.version}</version>
+        <version>${version.junit}</version>
       </dependency>
+      <!--单元测试 结束-->
+
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-configuration-processor</artifactId>
-        <version>${spring}</version>
+        <version>${version.spring-boot}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -143,7 +200,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven.compiler.version}</version>
+        <version>${maven.version.compiler}</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
