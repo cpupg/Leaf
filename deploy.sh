@@ -35,5 +35,5 @@ fi
 echo "开始生成启动脚本";
 cd $DEPLOY_DIR;
 jar_name="$(ls $DEPLOY_DIR/*.jar)";
-echo "java -cp $jar_name com.sankuai.inf.leaf.server.LeafServerApplication %*">$SHELL_FILE;
+echo "java -cp $jar_name com.sankuai.inf.leaf.server.LeafServerApplication">$SHELL_FILE;
 echo "启动脚本生成完成";

@@ -5,6 +5,9 @@ import com.sankuai.inf.leaf.common.Result;
 import com.sankuai.inf.leaf.common.Status;
 import com.sankuai.inf.leaf.segment.SegmentIDGenImpl;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * 生成id用的静态方法类。
  *
@@ -39,8 +42,9 @@ public class LeafSegmentGenerator {
 
     public static String getStringIdWithTypeAndDate(String type) {
         Result result = idGen.get(type);
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         if (result.getStatus() == Status.SUCCESS) {
-            return type + result.getIdString();
+            return type + format.format(new Date()) + result.getIdString();
         }
         throw new LeafException("生成id失败:" + result.getId());
     }

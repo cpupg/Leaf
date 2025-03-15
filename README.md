@@ -9,8 +9,9 @@
 - 修改打包脚本，打包到`deploy`目录下，并生成启动脚本`start-server.sh`。
 - 修改server启动方式，将属性移动到启动参数，通过`-Dk=v`传入。
 - 不再限制号段表表名和字段名，由用户自行实现`IDAllocDao`接口，可以是mybatis 映射，也可以是服务组件`@Service`或`@Component`。
-- 增加id长度限制功能，通过`max_number`限制id长度。
+- 增加id长度限制功能，通过`max_number`限制id长度，比如999999代表最大长度是6。
 - 增加日期变化时重置id功能。
+- 增加带静态方法的工具类`LeafSegmentGenerator`。
 
 ### spring boot starter
 
@@ -47,20 +48,35 @@ Leaf Server的配置都在leaf-server/src/main/resources/leaf.properties中
 ##### 创建数据表
 
 ```sql
-CREATE
-DATABASE leaf
-CREATE TABLE `leaf_alloc`
-(
-    `biz_tag` varchar(128) NOT NULL DEFAULT '',
-    `max_id` bigint(20) NOT NULL DEFAULT '1',
-    `step` int(11) NOT NULL,
-    `description` varchar(256) DEFAULT NULL,
-    `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`biz_tag`)
-) ENGINE=InnoDB;
+-- mysql
+DROP TABLE IF EXISTS `leaf_alloc`;
+CREATE TABLE `leaf_alloc` (
+  `biz_tag` varchar(128)  NOT NULL DEFAULT '',
+  `prefix`  varchar(4) not null default '',
+  `max_id` bigint(20) NOT NULL DEFAULT '1',
+  `step` int(11) NOT NULL,
+  `description` varchar(256)  DEFAULT NULL,
+  `max_number`  bigint(20) not null default 999999,
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`biz_tag`)
+);
 
-insert into leaf_alloc(biz_tag, max_id, step, description)
-values ('leaf-segment-test', 1, 2000, 'Test leaf Segment Mode Get Id')
+-- pgsql
+-- pgsql没有on update，因此要手动更新。
+CREATE TABLE leaf_alloc
+(
+    biz_tag varchar(128) NOT NULL DEFAULT '' primary key,
+    prefix varchar(4) not null default '',
+    max_id bigint NOT NULL DEFAULT 1,
+    step int NOT NULL,
+    description varchar(256) DEFAULT NULL,
+    max_number bigint not null default 999999,
+    update_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+insert into leaf_alloc
+(biz_tag, prefix, max_id, step, description, max_number)
+values('test', 'test', 1, 100, '测试', '999999');
 ```
 
 ##### 配置相关数据项
@@ -94,8 +110,7 @@ sh deploy.sh
 
 ```shell
 cd deploy;
-# args是上面的配置，通过-Dk=v传入
-sh args start-server.sh
+sh start-server.sh
 ```
 
 ##### 测试
