@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.sankuai.inf.leaf</groupId>
     <artifactId>leaf-parent</artifactId>
-    <version>1.0.1</version>
+    <version>2.0.0</version>
   </parent>
 
   <artifactId>leaf-spring-boot-starter</artifactId>
