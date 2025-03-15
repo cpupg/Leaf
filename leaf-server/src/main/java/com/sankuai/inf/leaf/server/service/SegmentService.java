@@ -7,8 +7,8 @@ import com.sankuai.inf.leaf.common.Result;
 import com.sankuai.inf.leaf.common.ZeroIDGen;
 import com.sankuai.inf.leaf.segment.SegmentIDGenImpl;
 import com.sankuai.inf.leaf.segment.dao.IDAllocDao;
-import com.sankuai.inf.leaf.segment.dao.impl.IDAllocDaoImpl;
 import com.sankuai.inf.leaf.server.Constants;
+import com.sankuai.inf.leaf.server.dao.IDAllocDaoImpl;
 import com.sankuai.inf.leaf.server.exception.InitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import java.sql.SQLException;
 import java.util.Properties;
 
-@Service("SegmentService")
+@Service
 public class SegmentService {
     private Logger logger = LoggerFactory.getLogger(SegmentService.class);
 
@@ -31,6 +31,7 @@ public class SegmentService {
             // Config dataSource
             dataSource = new DruidDataSource();
             dataSource.setUrl(properties.getProperty(Constants.LEAF_JDBC_URL));
+            dataSource.setDriverClassName(properties.getProperty(Constants.LEAF_JDBC_DRIVER));
             dataSource.setUsername(properties.getProperty(Constants.LEAF_JDBC_USERNAME));
             dataSource.setPassword(properties.getProperty(Constants.LEAF_JDBC_PASSWORD));
             dataSource.init();

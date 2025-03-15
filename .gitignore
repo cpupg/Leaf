@@ -12,3 +12,9 @@
 target/
 logs/
 log/
+
+# 本地开发会修改这个文件，代码仓库只提供模板文件
+application.yml
+leaf.properties
+
+start-server.sh

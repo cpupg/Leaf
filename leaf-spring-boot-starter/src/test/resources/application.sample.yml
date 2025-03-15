@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url:
+    username:
+    password:
+    driver-class-name:
+    type:
+leaf:
+  segment:
+    enable: true
