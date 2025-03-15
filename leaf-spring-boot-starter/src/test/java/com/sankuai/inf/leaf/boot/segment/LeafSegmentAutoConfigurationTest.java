@@ -1,26 +1,32 @@
 package com.sankuai.inf.leaf.boot.segment;
 
-import com.sankuai.inf.leaf.IDGen;
-import com.sankuai.inf.leaf.segment.dao.IDAllocDao;
+import com.sankuai.inf.leaf.segment.SegmentIDGenImpl;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@SpringBootTest(classes = SpringBootConfig.class)
-@RunWith(SpringJUnit4ClassRunner.class)
 public class LeafSegmentAutoConfigurationTest {
-
-    @Autowired
-    private ApplicationContext context;
+    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+            .withPropertyValues("leaf.segment.enable=true")
+            .withConfiguration(AutoConfigurations.of(LeafSegmentAutoConfiguration.class));
 
     @Test
-    public void testSpring() {
-        Assert.assertNotNull(context);
-        Assert.assertNotNull(context.getBean(IDAllocDao.class));
-        Assert.assertNotNull(context.getBean(IDGen.class));
+    public void test() {
+        contextRunner.withUserConfiguration(IDAllocDaoConfig.class).run(context -> {
+            Assert.assertNotNull(context.getBean(SegmentIDGenImpl.class));
+            Assert.assertNotNull(context.getBean(IdAllocDaoImpl.class));
+        });
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    static class IDAllocDaoConfig {
+
+        @Bean
+        IdAllocDaoImpl getIDAllocDao() {
+            return new IdAllocDaoImpl();
+        }
     }
 }
